@@ -7,7 +7,7 @@ def create_tests(code_file):
         code = f.read()
 
     tree = ast.parse(code)
-    print (ast.dump(tree, indent=4))
+    print(ast.dump(tree, indent = 4))
 
     # Поиск функций и классов в коде
     functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)]

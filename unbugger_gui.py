@@ -4,6 +4,7 @@ from tkinter import scrolledtext
 import ctypes
 import re
 import os
+import traceback
 
 # Increas Dots Per inch so it looks sharper
 ctypes.windll.shcore.SetProcessDpiAwareness(True)
@@ -25,26 +26,42 @@ def file_open():
             editArea.delete('1.0', END)
             editArea.insert('1.0', file_string)
             changes()
+            
+def test(event=None):
+    # with open('run.py', 'r', encoding='utf-8') as f:
+    os.system('start cmd /K "python unbugger.py"')
 
-# Execute the Programm
-def execute(event=None):
+# Debug the Programm
+def debug(event=None):
     # Write the Content to the Temporary File
     with open('run.py', 'w', encoding='utf-8') as f:
         f.write(editArea.get('1.0', END))
 
+    with open('run.py', 'r', encoding='utf-8') as f:
+        try:
+            exec(f.read())
+        except:
+            error_text = traceback.format_exc()
+            print(error_text)
+            
+            finding_str = 'File "<string>", line '
+            index = error_text.find(finding_str) + len(finding_str)
+            
+            line_number = str()
+            for char in error_text[index:]:
+                print(char)
+                if char != ',':
+                    line_number += char
+                else:
+                    break
+            line_number = int(line_number)
+            print(f"line_number = {line_number}")
+            editArea.mark_set("insert", "%d.%d" % (line_number, 0))
+            editArea.tag_add("sel", "%d.%d" % (line_number, 0), "%d.%d" % (line_number, 5))
+            # print(f"index = {index}   |   error_text[index] = {error_text[index]}")
     # Start the File in a new CMD Window
-    os.system('start cmd /K "python unbugger.py"')
+    # os.system('start cmd /K "python unbugger.py"')
     # os.system('start cmd /K "python run.py"')
-
-root.option_add("*tearOff", FALSE)
-menu = Menu()
-
-file_menu = Menu()
-file_menu.add_command(label = "Open", command = file_open)
-file_menu.add_command(label = "Run", command = execute)
-menu.add_cascade(label = "File", menu = file_menu)
-
-root.config(menu = menu)
 
 # Register Changes made to the Editor Content
 def changes(event=None):
@@ -143,7 +160,18 @@ parser = ArgumentParser(
 editArea.bind('<KeyRelease>', changes)
 
 # Bind Control + R to the exec function
-root.bind('<Control-r>', execute)
+root.bind('<Control-d>', debug)
+
+root.option_add("*tearOff", FALSE)
+menu = Menu()
+
+file_menu = Menu()
+file_menu.add_command(label = "Open", command = file_open)
+file_menu.add_command(label = "Debug", command = debug)
+file_menu.add_command(label = "Test", command = test)
+menu.add_cascade(label = "File", menu = file_menu)
+
+root.config(menu = file_menu)
 
 changes()
 root.mainloop()
