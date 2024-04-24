@@ -1,23 +1,29 @@
+import tkinter
 from tkinter import *
 from tkinter import filedialog
 from tkinter import scrolledtext
-import ctypes
+# import ctypes
 import re
 import os
+import tkinter.messagebox
 import traceback
 
 # Increas Dots Per inch so it looks sharper
-ctypes.windll.shcore.SetProcessDpiAwareness(True)
+# ctypes.windll.shcore.SetProcessDpiAwareness(True)
 
-# Setup Tkinter
+#################
 root = Tk()
 root.geometry('1000x800')
-root.wm_title('Unbugger')
+root.wm_title('Unbugger GUI')
+root.iconbitmap("icon.ico")
+#################
 
+# Открытие файла
 def file_open():
     file_name = filedialog.askopenfilename(filetypes = [('Python', '*.py')])
-    
     print(file_name)
+    
+    # Чтение файла
     if file_name or file_name != '':
         with open(file_name, 'r', encoding='utf-8') as f:
             file_string = ""
@@ -26,56 +32,72 @@ def file_open():
             editArea.delete('1.0', END)
             editArea.insert('1.0', file_string)
             changes()
-            
+ 
+# Тестирование кода           
 def test(event=None):
-    # with open('run.py', 'r', encoding='utf-8') as f:
     os.system('start cmd /K "python unbugger.py"')
 
-# Debug the Programm
+# Дебагинг кода
 def debug(event=None):
-    # Write the Content to the Temporary File
+    # Запись кода во временный файл
     with open('run.py', 'w', encoding='utf-8') as f:
         f.write(editArea.get('1.0', END))
+        
+    # Очищение от красных строк
+    editArea.tag_delete("error")
 
+    # Чтение файла для запуска
     with open('run.py', 'r', encoding='utf-8') as f:
         try:
-            exec(f.read())
+            # Запуск кода
+            exec(f.read(), globals())
         except:
+            # Получение текста ошибки
             error_text = traceback.format_exc()
             print(error_text)
             
-            finding_str = 'File "<string>", line '
-            index = error_text.find(finding_str) + len(finding_str)
-            
-            line_number = str()
-            for char in error_text[index:]:
-                print(char)
-                if char != ',':
-                    line_number += char
-                else:
-                    break
-            line_number = int(line_number)
-            print(f"line_number = {line_number}")
-            editArea.mark_set("insert", "%d.%d" % (line_number, 0))
-            editArea.tag_add("sel", "%d.%d" % (line_number, 0), "%d.%d" % (line_number, 5))
-            # print(f"index = {index}   |   error_text[index] = {error_text[index]}")
+            # Проверка на принудительный выход из программы
+            if error_text.find('SystemExit: 0') != -1:
+                print("Принудительный выход из программы! Ошибок не найдено")
+            else:
+                line_number = str()
+                # Поиск проблемной строки кода
+                finding_str = 'File "<string>", line '
+                index = error_text.find(finding_str) + len(finding_str)
+                for char in error_text[index:]:
+                    print(char)
+                    if char != ',' and char != '\n':
+                        line_number += char
+                    else:
+                        break
+                line_number = int(line_number)
+                print(f"line_number = {line_number}")
+                
+                # Окрашивание проблемной строки в красный цвет
+                editArea.mark_set("insert", "%d.%d" % (line_number, 0))
+                editArea.tag_add("error", "%d.%d" % (line_number, 0), 'insert lineend')
+                editArea.tag_config("error", background=error)
+                
+                tkinter.messagebox.showerror("Исключение", error_text)
     # Start the File in a new CMD Window
-    # os.system('start cmd /K "python unbugger.py"')
     # os.system('start cmd /K "python run.py"')
 
 # Register Changes made to the Editor Content
 def changes(event=None):
     global previousText
+    
+    # update_line_numbers(event=None)
 
     # If actually no changes have been made stop / return the function
-    if editArea.get('1.0', END) == previousText:
-        return
+    # Если не произошло изменений
+    # if editArea.get('1.0', END) == previousText:
+        # return
 
-    # Remove all tags so they can be redrawn
+    # Удаление тегов для их нового добавления
     for tag in editArea.tag_names():
         editArea.tag_remove(tag, "1.0", "end")
 
-    # Add tags where the search_re function found the pattern
+    # Добавление тегов там где search_re найдёт нужные слова
     i = 0
     for pattern, color in repl:
         for start, end in search_re(pattern, editArea.get('1.0', END)):
@@ -86,6 +108,7 @@ def changes(event=None):
 
     previousText = editArea.get('1.0', END) 
 
+# Поиск регулярных выражений (ключевых слов, комментариев, строк)
 def search_re(pattern, text, groupid=0):
     matches = []
 
@@ -99,21 +122,30 @@ def search_re(pattern, text, groupid=0):
 
     return matches
 
+# Конвертация цветов
 def rgb(rgb):
     return "#%02x%02x%02x" % rgb
 
+# def update_line_numbers(event):
+#     line_numbers.delete(1.0, END)
+#     for i in range(1, int(editArea.index('end').split('.')[0])):
+#         line_numbers.insert(END, str(i) + '\n')
+#     line_numbers.tag_configure("align", justify='right')
+#     line_numbers.tag_add("align", 1.0, "end")
 
-previousText = ''
+previousText = '' # Предыдущий текст
 
-# Define colors for the variouse types of tokens
+# Определение цветов ключевых слов в коде #####
 normal = rgb((234, 234, 234))
-keywords = rgb((234, 95, 95))
+keywords = rgb((148, 131, 242))
 comments = rgb((95, 234, 165))
 string = rgb((234, 162, 95))
 function = rgb((95, 211, 234))
 background = rgb((42, 42, 42))
-font = 'Consolas 12'
-
+error = rgb((255, 35, 35))
+###############################################
+font = '"Consolas" 12'
+###############################################
 
 # Define a list of Regex Pattern that should be colored in a certain way
 repl = [
@@ -123,29 +155,54 @@ repl = [
     ['#.*?$', comments],
 ]
 
-# Make the Text Widget
-# Add a hefty border width so we can achieve a little bit of padding
-editArea = scrolledtext.ScrolledText(
+# Номера строк слева
+# line_numbers = Text(
+#     root,
+#     # width=4,
+#     # padx=4,
+#     # pady=4,
+#     relief=RAISED,
+#     borderwidth=15,
+#     font=font,
+# )
+# line_numbers.pack(side=LEFT, fill=Y)
+
+
+# Колесо прокрутки ################
+scrollbar = Scrollbar(
+    root,
+    width=20
+)
+scrollbar.pack(
+    side=RIGHT,
+    fill=BOTH,
+)
+
+def scroll(*args):
+    editArea.yview(*args)
+    
+scrollbar.config(command=scroll)
+################################
+
+
+# Гланый редактор кода ################
+editArea = Text(
     root,
     background=background,
     foreground=normal,
     insertbackground=normal,
-    relief='raised',
-    borderwidth=30,
-    font=font
+    relief=RAISED,
+    borderwidth=15,
+    font=font,
+    yscrollcommand=scrollbar.set
 )
-
-# scrollb = Scrollbar(command = editArea.yview)
-# editArea['yscrollcommand'] = scrollb.set
-
-# Place the Edit Area with the pack method
 editArea.pack(
+    side=LEFT,
     fill=BOTH,
-    expand=1
+    expand=True
 )
-
-# Insert some Standard Text into the Edit Area
-editArea.insert('1.0', """from argparse import ArgumentParser
+editArea.insert('1.0',
+"""from argparse import ArgumentParser
 from random import shuffle, choice
 import string
 
@@ -154,14 +211,14 @@ parser = ArgumentParser(
     prog='Password Generator.',
     description='Generate any number of passwords with this tool.'
 )
-""")
-
-# Bind the KeyRelase to the Changes Function
+"""
+)
 editArea.bind('<KeyRelease>', changes)
+################################
 
-# Bind Control + R to the exec function
 root.bind('<Control-d>', debug)
 
+# Создание меню ################
 root.option_add("*tearOff", FALSE)
 menu = Menu()
 
@@ -170,6 +227,7 @@ file_menu.add_command(label = "Open", command = file_open)
 file_menu.add_command(label = "Debug", command = debug)
 file_menu.add_command(label = "Test", command = test)
 menu.add_cascade(label = "File", menu = file_menu)
+################################
 
 root.config(menu = file_menu)
 
