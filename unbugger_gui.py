@@ -15,7 +15,7 @@ import traceback
 root = Tk()
 root.geometry('1000x800')
 root.wm_title('Unbugger GUI')
-root.iconbitmap("icon.ico")
+# root.iconbitmap('./icon.ico')
 #################
 
 # Открытие файла
