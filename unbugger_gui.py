@@ -60,27 +60,29 @@ def debug(event=None):
             if error_text.find('SystemExit: 0') != -1:
                 print("Принудительный выход из программы! Ошибок не найдено")
             else:
-                line_number = str()
                 # Поиск проблемной строки кода
+                line_number = str()
                 finding_str = 'File "<string>", line '
-                index = error_text.find(finding_str) + len(finding_str)
-                for char in error_text[index:]:
-                    print(char)
-                    if char != ',' and char != '\n':
-                        line_number += char
-                    else:
+                index = 0
+                while True:
+                    line_number = str()
+                    index = error_text.find(finding_str, index)
+                    if index == -1:
                         break
-                line_number = int(line_number)
-                print(f"line_number = {line_number}")
-                
-                # Окрашивание проблемной строки в красный цвет
-                editArea.mark_set("insert", "%d.%d" % (line_number, 0))
-                editArea.tag_add("error", "%d.%d" % (line_number, 0), 'insert lineend')
-                editArea.tag_config("error", background=error)
+                    index += len(finding_str)
+                    for char in error_text[index:]:
+                        if char != ',' and char != '\n':
+                            line_number += char
+                        else:
+                            break
+                    line_number = int(line_number)
+                    print(f"line_number = {line_number}")
+                    
+                    editArea.mark_set("insert", "%d.%d" % (line_number, 0))
+                    editArea.tag_add("error", "%d.%d" % (line_number, 0), 'insert lineend')
+                    editArea.tag_config("error", background=error)
                 
                 tkinter.messagebox.showerror("Исключение", error_text)
-    # Start the File in a new CMD Window
-    # os.system('start cmd /K "python run.py"')
 
 # Register Changes made to the Editor Content
 def changes(event=None):
@@ -88,10 +90,9 @@ def changes(event=None):
     
     # update_line_numbers(event=None)
 
-    # If actually no changes have been made stop / return the function
     # Если не произошло изменений
-    # if editArea.get('1.0', END) == previousText:
-        # return
+    if editArea.get('1.0', END) == previousText:
+        return
 
     # Удаление тегов для их нового добавления
     for tag in editArea.tag_names():
@@ -202,15 +203,16 @@ editArea.pack(
     expand=True
 )
 editArea.insert('1.0',
-"""from argparse import ArgumentParser
-from random import shuffle, choice
-import string
+"""from random import randint
 
-# Setting up the Argument Parser
-parser = ArgumentParser(
-    prog='Password Generator.',
-    description='Generate any number of passwords with this tool.'
-)
+# Test function
+def print_random_number(digits: int):
+    if digits > 0:
+        print(randint(0, 10**digits))
+    else:
+        print("Digits must be bigger then 0")
+
+print_random_number(3)
 """
 )
 editArea.bind('<KeyRelease>', changes)

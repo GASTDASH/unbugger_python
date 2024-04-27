@@ -102,7 +102,7 @@ class StorageWindow(QWidget):
 
         # Кнопка "-1"
         self.minus_1_button = QPushButton(self)
-        self.minus_1_button.setStyleSheet1("font-size: 14px; background-color: #3a64f0; color: white;")
+        self.minus_1_button.setStyleSheet("font-size: 14px; background-color: #3a64f0; color: white;")
         self.minus_1_button.setText("-1")
         self.minus_1_button.clicked.connect(self.minus_1)
         layout.addWidget(self.minus_1_button, 5, 1)
