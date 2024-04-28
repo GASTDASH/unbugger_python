@@ -16,7 +16,8 @@ import subprocess
 root = Tk()
 root.geometry('1000x800')
 root.wm_title('Unbugger GUI')
-# root.iconbitmap('./icon.ico')
+icon = PhotoImage(file='./icon.png')
+root.tk.call('wm', 'iconphoto', root._w, icon)
 #################
 
 # Открытие файла
