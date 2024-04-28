@@ -7,6 +7,7 @@ import re
 import os
 import tkinter.messagebox
 import traceback
+import subprocess
 
 # Increas Dots Per inch so it looks sharper
 # ctypes.windll.shcore.SetProcessDpiAwareness(True)
@@ -35,7 +36,13 @@ def file_open():
  
 # Тестирование кода           
 def test(event=None):
-    os.system('start cmd /K "python unbugger.py"')
+    # Запись кода во временный файл
+    with open('run.py', 'w', encoding='utf-8') as f:
+        f.write(editArea.get('1.0', END))
+
+    # Запуск тестов
+    # os.system('start cmd /K "python unbugger.py"')
+    subprocess.call('konsole --noclose -e "python unbugger.py"', shell=True)
 
 # Дебагинг кода
 def debug(event=None):
