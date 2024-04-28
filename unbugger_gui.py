@@ -9,9 +9,6 @@ import tkinter.messagebox
 import traceback
 import subprocess
 
-# Increas Dots Per inch so it looks sharper
-# ctypes.windll.shcore.SetProcessDpiAwareness(True)
-
 #################
 root = Tk()
 root.geometry('1000x800')
@@ -20,8 +17,11 @@ icon = PhotoImage(file='./icon.png')
 root.tk.call('wm', 'iconphoto', root._w, icon)
 #################
 
-# Открытие файла
 def file_open():
+    '''
+    Открытие файла
+    '''
+
     file_name = filedialog.askopenfilename(filetypes = [('Python', '*.py')])
     print(file_name)
     
@@ -35,18 +35,24 @@ def file_open():
             editArea.insert('1.0', file_string)
             changes()
  
-# Тестирование кода           
-def test(event=None):
+def test():
+    '''
+    Тестирование кода
+    '''
+
     # Запись кода во временный файл
     with open('run.py', 'w', encoding='utf-8') as f:
         f.write(editArea.get('1.0', END))
 
     # Запуск тестов
-    # os.system('start cmd /K "python unbugger.py"')
-    subprocess.call('konsole --noclose -e "python unbugger.py"', shell=True)
+    # os.system('start cmd /K "python unbugger.py"') # WINDOWS
+    subprocess.call('konsole --noclose -e "python unbugger.py"', shell=True) # LINUX with KDE PLASMA
 
-# Дебагинг кода
-def debug(event=None):
+def debug():
+    '''
+    Дебагинг кода
+    '''
+
     # Запись кода во временный файл
     with open('run.py', 'w', encoding='utf-8') as f:
         f.write(editArea.get('1.0', END))
@@ -92,8 +98,11 @@ def debug(event=None):
                 
                 tkinter.messagebox.showerror("Исключение", error_text)
 
-# Register Changes made to the Editor Content
-def changes(event=None):
+def changes():
+    '''
+    Регистрация изменений, сделанных в окне редактирования кода
+    '''
+
     global previousText
     
     # update_line_numbers(event=None)
@@ -117,8 +126,11 @@ def changes(event=None):
 
     previousText = editArea.get('1.0', END) 
 
-# Поиск регулярных выражений (ключевых слов, комментариев, строк)
 def search_re(pattern, text, groupid=0):
+    '''
+    Поиск регулярных выражений (ключевых слов, комментариев, строк)
+    '''
+    
     matches = []
 
     text = text.splitlines()
@@ -131,9 +143,19 @@ def search_re(pattern, text, groupid=0):
 
     return matches
 
-# Конвертация цветов
 def rgb(rgb):
+    '''
+    Конвертация цветов
+    '''
+
     return "#%02x%02x%02x" % rgb
+
+def scroll(*args):
+    '''
+    Прокрутка кода
+    '''
+
+    editArea.yview(*args)
 
 # def update_line_numbers(event):
 #     line_numbers.delete(1.0, END)
@@ -142,7 +164,8 @@ def rgb(rgb):
 #     line_numbers.tag_configure("align", justify='right')
 #     line_numbers.tag_add("align", 1.0, "end")
 
-previousText = '' # Предыдущий текст
+# Предыдущий текст
+previousText = ''
 
 # Определение цветов ключевых слов в коде #####
 normal = rgb((234, 234, 234))
@@ -156,7 +179,7 @@ error = rgb((255, 35, 35))
 font = '"Consolas" 12'
 ###############################################
 
-# Define a list of Regex Pattern that should be colored in a certain way
+# Определение списка регулярных выржаний для паттернов для покраски слов
 repl = [
     ['(^| )(False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)($| )', keywords],
     ['".*?"', string],
@@ -177,7 +200,7 @@ repl = [
 # line_numbers.pack(side=LEFT, fill=Y)
 
 
-# Колесо прокрутки ################
+# Колесо прокрутки #############
 scrollbar = Scrollbar(
     root,
     width=20
@@ -186,10 +209,6 @@ scrollbar.pack(
     side=RIGHT,
     fill=BOTH,
 )
-
-def scroll(*args):
-    editArea.yview(*args)
-    
 scrollbar.config(command=scroll)
 ################################
 
@@ -226,20 +245,21 @@ print_random_number(3)
 editArea.bind('<KeyRelease>', changes)
 ################################
 
-root.bind('<Control-d>', debug)
 
 # Создание меню ################
 root.option_add("*tearOff", FALSE)
-menu = Menu()
 
+menu = Menu()
 file_menu = Menu()
 file_menu.add_command(label = "Open", command = file_open)
 file_menu.add_command(label = "Debug", command = debug)
 file_menu.add_command(label = "Test", command = test)
 menu.add_cascade(label = "File", menu = file_menu)
-################################
 
 root.config(menu = file_menu)
+################################
+
+# root.bind('<Control-d>', debug)
 
 changes()
 root.mainloop()
