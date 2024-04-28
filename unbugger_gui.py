@@ -156,12 +156,34 @@ def scroll(*args):
 
     editArea.yview(*args)
 
+def select_venv():
+    '''
+    Выбор виртуальной среды
+    '''
+    
+    dir_path = filedialog.askdirectory()
+    print(f"dir_path = {dir_path}")
+
+    global venv_path
+    venv_path = dir_path
+
+def reset_venv():
+    '''
+    Отмена выбора виртуальной среды
+    '''
+
+    global venv_path
+    venv_path = ''
+
 # def update_line_numbers(event):
 #     line_numbers.delete(1.0, END)
 #     for i in range(1, int(editArea.index('end').split('.')[0])):
 #         line_numbers.insert(END, str(i) + '\n')
 #     line_numbers.tag_configure("align", justify='right')
 #     line_numbers.tag_add("align", 1.0, "end")
+
+# Виртуальная среда
+venv_path = ''
 
 # Предыдущий текст
 previousText = ''
@@ -253,6 +275,8 @@ file_menu = Menu()
 file_menu.add_command(label = "Open", command = file_open)
 file_menu.add_command(label = "Debug", command = debug)
 file_menu.add_command(label = "Test", command = test)
+file_menu.add_command(label = "Select venv", command = select_venv)
+file_menu.add_command(label = "Reset venv", command = reset_venv)
 menu.add_cascade(label = "File", menu = file_menu)
 
 root.config(menu = file_menu)
