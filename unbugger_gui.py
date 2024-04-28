@@ -2,7 +2,6 @@ import tkinter
 from tkinter import *
 from tkinter import filedialog
 from tkinter import scrolledtext
-# import ctypes
 import re
 import os
 import tkinter.messagebox
